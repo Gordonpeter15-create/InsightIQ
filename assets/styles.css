@@ -1,0 +1,65 @@
+:root {
+    --iq-indigo: #6366f1;
+    --iq-indigo-dark: #4338ca;
+    --iq-surface: #171a2b;
+    --iq-border: #2c3150;
+    --iq-muted: #a8b0c6;
+}
+
+.stApp {
+    background: radial-gradient(circle at 85% 0%, rgba(99, 102, 241, 0.16), transparent 28rem), #0e1117;
+}
+
+.block-container {
+    max-width: 1300px;
+    padding-top: 2.4rem;
+    padding-bottom: 3rem;
+}
+
+.iq-hero {
+    padding: 1.8rem 2rem;
+    margin: 0 0 1.8rem;
+    border: 1px solid rgba(129, 140, 248, 0.45);
+    border-radius: 20px;
+    background: linear-gradient(115deg, #252b63, #171a2b 62%, #16213b);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.22);
+}
+
+.iq-hero h1 { margin: 0; color: #ffffff; font-size: 2.25rem; }
+.iq-hero p { margin: 0.45rem 0 0; color: #c7d2fe; font-size: 1.05rem; }
+
+[data-testid="metric-container"] {
+    background: linear-gradient(145deg, #202540, #171a2b);
+    border: 1px solid var(--iq-border);
+    border-radius: 16px;
+    padding: 1rem 1.1rem;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+}
+
+[data-testid="metric-container"] label { color: var(--iq-muted); }
+
+section[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #14182a, #10131f);
+    border-right: 1px solid var(--iq-border);
+}
+
+section[data-testid="stSidebar"] .block-container { padding-top: 1.5rem; }
+
+.stButton > button, .stDownloadButton > button {
+    border: 0;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--iq-indigo), var(--iq-indigo-dark));
+    color: #ffffff;
+    font-weight: 600;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.stButton > button:hover, .stDownloadButton > button:hover {
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 7px 18px rgba(79, 70, 229, 0.32);
+}
+
+[data-testid="stDataFrame"] { border: 1px solid var(--iq-border); border-radius: 12px; overflow: hidden; }
+[data-testid="stChatMessage"] { border: 1px solid var(--iq-border); border-radius: 12px; padding: 0.25rem 0.7rem; background: rgba(23, 26, 43, 0.74); }
+[data-testid="stExpander"] { border: 1px solid var(--iq-border); border-radius: 12px; }
