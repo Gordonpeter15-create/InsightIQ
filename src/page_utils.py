@@ -1,3 +1,5 @@
+from html import escape
+
 import pandas as pd
 import streamlit as st
 
@@ -6,9 +8,40 @@ from src.currency import CURRENCIES, currency_label
 from src.session import get_currency, get_dataframe, set_currency
 
 
+PRIORITY_BADGES = {
+    "🔴 High Priority": ":red-badge[High priority]",
+    "🟡 Watch": ":orange-badge[Watch]",
+    "🟢 Opportunity": ":green-badge[Opportunity]",
+}
+
+
+def safe_markdown(text: str) -> str:
+    """Escape dollar signs so amounts like "$10 → $12" are not rendered as LaTeX maths."""
+    return str(text).replace("$", "\\$")
+
+
+def priority_badge(priority: str) -> str:
+    return PRIORITY_BADGES.get(priority, safe_markdown(priority))
+
+
+def page_header(title: str, description: str = "", eyebrow: str = "") -> None:
+    """Render the consistent InsightIQ page heading used on every page."""
+    eyebrow_html = f'<p class="iq-eyebrow">{escape(eyebrow)}</p>' if eyebrow else ""
+    description_html = f'<p class="iq-description">{escape(description)}</p>' if description else ""
+    st.markdown(
+        f'<div class="iq-page-header">{eyebrow_html}<h1>{escape(title)}</h1>{description_html}</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def readable_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Return a copy with display-friendly headers, e.g. Recent_Revenue -> Recent revenue."""
+    return df.rename(columns=lambda name: str(name).replace("_", " ").capitalize())
+
+
 def require_authenticated() -> None:
     if not st.session_state.get("authenticated", False):
-        st.warning("👆 Please sign in from the Home page first.")
+        st.warning("Please sign in to continue.")
         st.stop()
 
 
@@ -16,7 +49,7 @@ def require_dataframe() -> pd.DataFrame:
     require_authenticated()
     df = get_dataframe()
     if df is None:
-        st.warning("👆 Please upload a dataset from the Home page first.")
+        st.info("Upload a sales file on the Home page to see this analysis.")
         st.stop()
     return df.copy()
 

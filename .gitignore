@@ -182,3 +182,7 @@ cython_debug/
 
 # InsightIQ local user database
 data/insightiq_users.db*
+
+# Local dev test account and Claude preview config
+data/dev_test_account.txt
+.claude/

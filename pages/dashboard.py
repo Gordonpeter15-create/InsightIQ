@@ -9,13 +9,11 @@ from src.charts import (
 )
 from src.currency import format_money, money_label
 from src.metrics import calculate_metrics, product_performance
-from src.page_utils import render_data_filters, require_dataframe
+from src.page_utils import page_header, readable_columns, render_data_filters, require_dataframe, safe_markdown
 from src.session import get_currency
 
 
-st.set_page_config(page_title="Dashboard | InsightIQ", page_icon="📊", layout="wide")
-st.title("📊 Sales Dashboard")
-st.caption("Use the filters to focus the analysis on a product or period.")
+page_header("Sales Dashboard", "Revenue, products, and trends. Use the sidebar filters to focus on a product or period.", eyebrow="Analyse")
 
 df = render_data_filters(require_dataframe(), "dashboard")
 if df.empty:
@@ -30,8 +28,12 @@ show_kpi_cards(metrics, currency)
 best_col, lowest_col = st.columns(2)
 best = performance.iloc[0]
 lowest = performance.iloc[-1]
-best_col.success(f"🏆 **Best product**  \n{best['Product']} — {format_money(best['Revenue'], currency)}")
-lowest_col.warning(f"📉 **Lowest product**  \n{lowest['Product']} — {format_money(lowest['Revenue'], currency)}")
+with best_col.container(border=True):
+    st.caption(":material/arrow_upward: Best product")
+    st.markdown(safe_markdown(f"**{best['Product']}** · {format_money(best['Revenue'], currency)}"))
+with lowest_col.container(border=True):
+    st.caption(":material/arrow_downward: Lowest product")
+    st.markdown(safe_markdown(f"**{lowest['Product']}** · {format_money(lowest['Revenue'], currency)}"))
 
 st.divider()
 chart_left, chart_right = st.columns(2)
@@ -49,16 +51,19 @@ st.plotly_chart(monthly_revenue_chart(df, currency), width="stretch")
 st.divider()
 st.subheader("Product Performance")
 st.dataframe(
-    performance, width="stretch", hide_index=True,
-    column_config={"Revenue": st.column_config.NumberColumn(money_label("Revenue", currency))},
+    readable_columns(performance), width="stretch", hide_index=True,
+    column_config={"Revenue": st.column_config.NumberColumn(money_label("Revenue", currency), format="localized")},
 )
 
 with st.expander("View cleaned data"):
     st.dataframe(
-        df, width="stretch", hide_index=True,
+        readable_columns(df), width="stretch", hide_index=True,
         column_config={
-            column: st.column_config.NumberColumn(money_label(column, currency))
+            column: st.column_config.NumberColumn(money_label(column, currency), format="localized")
             for column in ("Price", "Revenue")
         },
     )
-st.download_button("⬇ Download filtered data", df.to_csv(index=False).encode("utf-8"), "insightiq_filtered_sales.csv", "text/csv")
+st.download_button(
+    "Download filtered data (CSV)", df.to_csv(index=False).encode("utf-8"), "insightiq_filtered_sales.csv", "text/csv",
+    icon=":material/download:",
+)

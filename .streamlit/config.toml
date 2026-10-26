@@ -1,6 +1,23 @@
+[client]
+# Hide developer controls (Deploy button, rerun options) from end users.
+toolbarMode = "minimal"
+
 [theme]
-primaryColor="#4F46E5"
-backgroundColor="#0E1117"
-secondaryBackgroundColor="#1E1E2F"
-textColor="#FAFAFA"
-font="sans serif"
+base = "dark"
+primaryColor = "#6366F1"
+backgroundColor = "#0B0D12"
+secondaryBackgroundColor = "#141821"
+textColor = "#E6E8EE"
+linkColor = "#A5B4FC"
+borderColor = "#232836"
+showWidgetBorder = true
+baseRadius = "8px"
+baseFontSize = 15
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+headingFont = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+chartCategoricalColors = ["#6366F1", "#22C55E", "#F59E0B", "#06B6D4", "#EC4899", "#A78BFA", "#84CC16", "#F97316"]
+
+[theme.sidebar]
+backgroundColor = "#0E1117"
+secondaryBackgroundColor = "#161A23"
+borderColor = "#1C2130"

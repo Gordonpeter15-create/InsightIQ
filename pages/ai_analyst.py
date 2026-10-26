@@ -1,14 +1,12 @@
 import streamlit as st
 
 from src.metrics import product_performance
-from src.page_utils import render_data_filters, require_dataframe
+from src.page_utils import page_header, render_data_filters, require_dataframe, safe_markdown
 from src.questions import answer_question
 from src.session import get_currency
 
 
-st.set_page_config(page_title="Ask Your Data | InsightIQ", page_icon="💬", layout="wide")
-st.title("💬 Ask Your Data")
-st.caption("Ask simple questions about the currently selected sales data.")
+page_header("Ask Your Data", "Ask plain-English questions about the currently selected sales data.", eyebrow="Analyse")
 
 df = render_data_filters(require_dataframe(), "questions")
 if df.empty:
@@ -23,7 +21,7 @@ if st.button("Clear chat"):
     st.rerun()
 for message in st.session_state.question_history:
     with st.chat_message(message["role"]):
-        st.write(message["content"])
+        st.markdown(safe_markdown(message["content"]))
 
 question = st.chat_input("Example: Which product made the most revenue?")
 if question:

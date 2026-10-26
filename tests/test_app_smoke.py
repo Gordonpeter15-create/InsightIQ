@@ -12,7 +12,8 @@ from src.uploads import dataframe_from_excel
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-PAGES = sorted((PROJECT_ROOT / "pages").glob("*.py"))
+# Home links to other pages, so it only runs inside app.py navigation; it is covered by the app.py tests.
+PAGES = sorted(page for page in (PROJECT_ROOT / "pages").glob("*.py") if page.name != "home.py")
 
 
 def demo_dataframe():
@@ -23,7 +24,7 @@ class AppSmokeTests(unittest.TestCase):
     def test_home_page_shows_sign_in_when_logged_out(self):
         app = AppTest.from_file(str(PROJECT_ROOT / "app.py"), default_timeout=30).run()
         self.assertFalse(app.exception)
-        self.assertEqual(app.subheader[0].value, "Welcome to InsightIQ")
+        self.assertEqual([tab.label for tab in app.tabs], ["Sign in", "Create account"])
 
     def test_home_page_renders_when_signed_in(self):
         app = AppTest.from_file(str(PROJECT_ROOT / "app.py"), default_timeout=30)
@@ -31,6 +32,17 @@ class AppSmokeTests(unittest.TestCase):
         app.session_state["user_name"] = "Smoke Test"
         app.run()
         self.assertFalse(app.exception)
+        self.assertTrue(any("Sign out" == button.label for button in app.sidebar.button))
+
+    def test_home_page_renders_with_data_loaded(self):
+        app = AppTest.from_file(str(PROJECT_ROOT / "app.py"), default_timeout=30)
+        app.session_state["authenticated"] = True
+        app.session_state["user_name"] = "Smoke Test"
+        app.session_state["sales_df"] = demo_dataframe()
+        app.session_state["currency"] = "NGN"
+        app.run()
+        self.assertFalse(app.exception, [e.value for e in app.exception])
+        self.assertEqual(app.metric[0].value, "112")
 
     def test_every_page_renders_with_demo_data(self):
         df = demo_dataframe()
@@ -62,7 +74,18 @@ class AppSmokeTests(unittest.TestCase):
         app.session_state["currency"] = "NGN"
         app.run()
         self.assertTrue(app.metric[0].value.startswith("₦"))
-        self.assertIn("₦", app.success[0].value)
+        self.assertTrue(any("₦" in block.value for block in app.markdown))
+
+    def test_advisor_dollar_amounts_are_not_rendered_as_maths(self):
+        # Two "$" signs in one markdown string would otherwise be rendered as a LaTeX formula.
+        app = AppTest.from_file(str(PROJECT_ROOT / "pages" / "business_advisor.py"), default_timeout=30)
+        app.session_state["authenticated"] = True
+        app.session_state["sales_df"] = demo_dataframe()
+        app.run()
+        amounts = [block.value for block in app.markdown if "→" in block.value]
+        self.assertTrue(amounts)
+        for value in amounts:
+            self.assertEqual(value.count("$"), value.count("\\$"), value)
 
     def test_settings_currency_choice_applies_to_session(self):
         # No user_email is set, so the choice is not written to the real accounts database.

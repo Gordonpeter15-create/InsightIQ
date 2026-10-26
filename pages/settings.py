@@ -1,12 +1,11 @@
 import streamlit as st
 
-from src.page_utils import render_currency_selector, require_authenticated
+from src.page_utils import page_header, render_currency_selector, require_authenticated
 from src.session import clear_dataframe, get_dataframe
 
 
-st.set_page_config(page_title="Settings | InsightIQ", page_icon="⚙️", layout="wide")
 require_authenticated()
-st.title("⚙️ Settings")
+page_header("Settings", "Preferences for your account and this session.", eyebrow="Account")
 
 st.subheader("Currency")
 st.write("Choose the currency your sales data is recorded in. Your choice is saved to your account.")

@@ -2,13 +2,15 @@ import streamlit as st
 
 from src.forecasting import forecast_revenue, forecast_revenue_chart
 from src.currency import format_money
-from src.page_utils import render_data_filters, require_dataframe
+from src.page_utils import page_header, render_data_filters, require_dataframe
 from src.session import get_currency
 
 
-st.set_page_config(page_title="Forecasting | InsightIQ", page_icon="🔮", layout="wide")
-st.title("🔮 Revenue Forecast")
-st.caption("A simple learning forecast based on daily revenue trend; it is not a financial guarantee.")
+page_header(
+    "Revenue Forecast",
+    "A simple trend forecast based on daily revenue. It is an estimate, not a financial guarantee.",
+    eyebrow="Analyse",
+)
 
 df = render_data_filters(require_dataframe(), "forecast")
 if df.empty:

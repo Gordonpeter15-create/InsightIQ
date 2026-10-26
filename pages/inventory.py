@@ -2,13 +2,22 @@ import pandas as pd
 import streamlit as st
 
 from src.inventory import inventory_guidance
-from src.page_utils import render_data_filters, require_dataframe
+from src.page_utils import (
+    page_header,
+    priority_badge,
+    readable_columns,
+    render_data_filters,
+    require_dataframe,
+    safe_markdown,
+)
 from src.templates import inventory_template_bytes
 
 
-st.set_page_config(page_title="Inventory Guidance | InsightIQ", page_icon="🛒", layout="wide")
-st.title("🛒 Inventory Guidance")
-st.caption("Use supplied stock information with observed sales pace to prioritize stock review.")
+page_header(
+    "Inventory Guidance",
+    "Prioritise stock reviews using the stock levels you supply and your observed sales pace.",
+    eyebrow="Analyse",
+)
 
 with st.expander("Download the inventory-ready template", expanded=False):
     st.write(
@@ -61,21 +70,21 @@ watch.metric("Products to watch", summary["🟡 Watch"])
 monitoring.metric("Products to monitor", summary["🟢 Opportunity"])
 
 st.caption("Each count is based on the latest stock and reorder-point value supplied for each product.")
-st.header("Priority Stock Reviews")
+st.subheader("Priority stock reviews")
 for item in items.itertuples():
     with st.container(border=True):
-        st.markdown(f"**{item.Priority} — {item.Product}: {item.Recommended_Action}**")
-        st.write(item.Reason)
+        st.markdown(f"{priority_badge(item.Priority)} **{safe_markdown(item.Product)}: {safe_markdown(item.Recommended_Action)}**")
+        st.markdown(safe_markdown(item.Reason))
 
 st.divider()
-st.subheader("Inventory Detail")
+st.subheader("Inventory detail")
 display = items.copy()
 for column in ("Current_Stock", "Reorder_Point", "Lead_Time_Days", "Average_Daily_Units"):
     if column in display:
         display[column] = display[column].map(
             lambda value: "Not provided" if pd.isna(value) else f"{value:,.1f}"
         )
-st.dataframe(display, width="stretch", hide_index=True)
+st.dataframe(readable_columns(display), width="stretch", hide_index=True)
 
 st.caption(
     "Important: current stock and reorder points are read from the uploaded file. "

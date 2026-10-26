@@ -29,7 +29,7 @@ def forecast_revenue_chart(df: pd.DataFrame, forecast: pd.DataFrame, currency: s
             y=daily["Revenue"],
             mode="lines+markers",
             name="Actual revenue",
-            line={"color": "#22C55E"},
+            line={"color": "#A5B4FC"},
         )
     )
     figure.add_trace(
@@ -38,7 +38,7 @@ def forecast_revenue_chart(df: pd.DataFrame, forecast: pd.DataFrame, currency: s
             y=forecast["Revenue"],
             mode="lines+markers",
             name="Forecast",
-            line={"dash": "dash", "color": "#4F46E5"},
+            line={"dash": "dash", "color": "#F59E0B"},
         )
     )
     return figure.update_layout(yaxis_title=money_label("Revenue", currency), xaxis_title="", showlegend=True)
