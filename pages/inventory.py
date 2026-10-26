@@ -84,6 +84,12 @@ for column in ("Current_Stock", "Reorder_Point", "Lead_Time_Days", "Average_Dail
         display[column] = display[column].map(
             lambda value: "Not provided" if pd.isna(value) else f"{value:,.1f}"
         )
+if "Days_Of_Stock" in display:
+    # Missing here means the product had no sales in the selected period, not missing stock data.
+    display["Days_Of_Stock"] = display["Days_Of_Stock"].map(
+        lambda value: "No recent sales" if pd.isna(value) else f"{value:,.1f}"
+    )
+    display = display.rename(columns={"Days_Of_Stock": "Days_Of_Stock_(estimate)"})
 st.dataframe(readable_columns(display), width="stretch", hide_index=True)
 
 st.caption(

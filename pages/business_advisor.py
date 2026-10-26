@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 
-from src.advisor import analyze_business_advisor, executive_summary
+from src.advisor import analyze_business_advisor, day_of_week_pattern, executive_summary
 from src.currency import money_label
 from src.inventory import inventory_guidance
 from src.page_utils import (
@@ -99,6 +99,7 @@ else:
 st.divider()
 st.subheader("Seasonal and trend signals")
 st.markdown(safe_markdown(advisor["seasonal"]))
+st.markdown(safe_markdown(day_of_week_pattern(df, currency)["message"]))
 
 st.divider()
 st.subheader("Today's action plan")

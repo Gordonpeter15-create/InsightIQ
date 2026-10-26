@@ -2,11 +2,13 @@ import streamlit as st
 
 from src.cards import show_kpi_cards
 from src.charts import (
+    day_of_week_chart,
     monthly_revenue_chart,
     revenue_by_product_chart,
     revenue_distribution_chart,
     revenue_over_time_chart,
 )
+from src.advisor import day_of_week_pattern
 from src.currency import format_money, money_label
 from src.metrics import calculate_metrics, product_performance
 from src.page_utils import page_header, readable_columns, render_data_filters, require_dataframe, safe_markdown
@@ -45,8 +47,17 @@ with chart_right:
     st.plotly_chart(revenue_distribution_chart(performance), width="stretch")
 st.subheader("Revenue Over Time")
 st.plotly_chart(revenue_over_time_chart(df, currency), width="stretch")
-st.subheader("Monthly Revenue")
-st.plotly_chart(monthly_revenue_chart(df, currency), width="stretch")
+weekday_column, monthly_column = st.columns(2)
+with weekday_column:
+    st.subheader("Revenue by Day of Week")
+    weekdays = day_of_week_pattern(df, currency)
+    if weekdays["available"]:
+        st.plotly_chart(day_of_week_chart(weekdays["table"], currency), width="stretch")
+    else:
+        st.info(weekdays["message"])
+with monthly_column:
+    st.subheader("Monthly Revenue")
+    st.plotly_chart(monthly_revenue_chart(df, currency), width="stretch")
 
 st.divider()
 st.subheader("Product Performance")

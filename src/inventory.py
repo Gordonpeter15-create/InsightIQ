@@ -105,12 +105,22 @@ def inventory_guidance(df: pd.DataFrame) -> dict:
                 f" Observed sales pace is {daily_units:.1f} units per recorded day; "
                 f"that is about {expected_demand:.1f} units over the stated {lead_time:.0f}-day lead time."
             )
+
+        # Simple arithmetic estimate: supplied stock divided by the observed sales pace.
+        days_of_stock = stock / daily_units if daily_units > 0 else None
+        if days_of_stock is not None:
+            reason += f" Estimate: at the observed pace, current stock covers about {days_of_stock:.1f} recorded day(s) of sales"
+            if lead_time is not None and lead_time > 0:
+                comparison = "shorter than" if days_of_stock < lead_time else "at least"
+                reason += f", {comparison} the stated {lead_time:.0f}-day lead time"
+            reason += "."
         rows.append({
             "Product": product,
             "Current_Stock": stock,
             "Reorder_Point": reorder,
             "Lead_Time_Days": lead_time,
             "Average_Daily_Units": daily_units,
+            "Days_Of_Stock": days_of_stock,
             "Priority": priority,
             "Recommended_Action": action,
             "Reason": reason,

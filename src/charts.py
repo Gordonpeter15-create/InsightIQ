@@ -40,6 +40,19 @@ def revenue_over_time_chart(df: pd.DataFrame, currency: str = DEFAULT_CURRENCY):
     ).update_layout(yaxis_title=money_label("Revenue", currency), xaxis_title="")
 
 
+def day_of_week_chart(table: pd.DataFrame, currency: str = DEFAULT_CURRENCY):
+    """Average revenue per recorded day for each weekday, from day_of_week_pattern()."""
+    return px.bar(
+        table,
+        x="Day",
+        y="Average_Revenue",
+        text_auto=".2s",
+        hover_data={"Recorded_Days": True},
+        labels={"Recorded_Days": "Recorded days", "Average_Revenue": "Average revenue"},
+        title="",
+    ).update_layout(yaxis_title=money_label("Average per recorded day", currency), xaxis_title="")
+
+
 def monthly_revenue_chart(df: pd.DataFrame, currency: str = DEFAULT_CURRENCY):
     monthly = df.assign(Month=df["Date"].dt.to_period("M").astype(str)).groupby(
         "Month", as_index=False

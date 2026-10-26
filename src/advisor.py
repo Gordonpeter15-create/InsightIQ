@@ -144,6 +144,75 @@ def _seasonal_signal(df: pd.DataFrame) -> str:
     return "Observed: no strong weekend-versus-weekday revenue difference appears in the available data."
 
 
+WEEKDAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+MIN_DATES_FOR_WEEKDAY_PATTERN = 14
+MIN_OBSERVATIONS_PER_WEEKDAY = 2
+
+
+def day_of_week_pattern(df: pd.DataFrame, currency: str = DEFAULT_CURRENCY) -> dict:
+    """Compare average revenue per recorded day for each weekday.
+
+    Only weekdays observed at least twice are compared. Weekdays with no sales
+    records are reported as such; InsightIQ does not assume the store was closed.
+    """
+    daily = df.groupby("Date", as_index=False)["Revenue"].sum()
+    if len(daily) < MIN_DATES_FOR_WEEKDAY_PATTERN:
+        return {
+            "available": False,
+            "message": (
+                "Insufficient data to compare days of the week reliably. "
+                f"Upload at least {MIN_DATES_FOR_WEEKDAY_PATTERN} different sales dates (two weeks)."
+            ),
+            "table": pd.DataFrame(),
+        }
+
+    daily["Day"] = daily["Date"].dt.dayofweek.map(dict(enumerate(WEEKDAYS)))
+    table = (
+        daily.groupby("Day")["Revenue"].agg(Recorded_Days="size", Average_Revenue="mean")
+        .reindex(WEEKDAYS).dropna(subset=["Recorded_Days"]).reset_index()
+    )
+    table["Recorded_Days"] = table["Recorded_Days"].astype(int)
+    compared = table[table["Recorded_Days"] >= MIN_OBSERVATIONS_PER_WEEKDAY]
+    if len(compared) < 2:
+        return {
+            "available": False,
+            "message": "Insufficient repeated weekdays to compare days of the week reliably.",
+            "table": table,
+        }
+
+    best = compared.loc[compared["Average_Revenue"].idxmax()]
+    slowest = compared.loc[compared["Average_Revenue"].idxmin()]
+    difference = _percent_change(float(best["Average_Revenue"]), float(slowest["Average_Revenue"]))
+    weeks = len(daily) / 7
+
+    if difference is not None and difference >= SIGNIFICANT_CHANGE_PERCENT:
+        message = (
+            f"Observed: {best['Day']} is the strongest day, averaging "
+            f"{format_money(float(best['Average_Revenue']), currency)} per recorded day, "
+            f"{difference:.1f}% above {slowest['Day']} "
+            f"({format_money(float(slowest['Average_Revenue']), currency)}). "
+            "Next step: plan staffing, shelf filling, and deliveries around the busier days."
+        )
+    else:
+        message = (
+            "Observed: revenue is fairly even across the days of the week; the gap between the strongest "
+            f"and slowest day is under {SIGNIFICANT_CHANGE_PERCENT:.0f}%."
+        )
+    message += f" Based on about {weeks:.0f} week(s) of recorded sales."
+
+    missing = [day for day in WEEKDAYS if day not in set(table["Day"])]
+    if missing:
+        message += f" No sales are recorded on {', '.join(missing)} in this data."
+    return {
+        "available": True,
+        "message": message,
+        "table": table,
+        "best_day": best["Day"],
+        "slowest_day": slowest["Day"],
+        "difference_percent": difference,
+    }
+
+
 def analyze_business_advisor(df: pd.DataFrame, currency: str = DEFAULT_CURRENCY) -> dict:
     """Return all evidence and action recommendations used by the Advisor page."""
     periods = _comparison_periods(df)

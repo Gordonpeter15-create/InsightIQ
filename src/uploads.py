@@ -8,6 +8,8 @@ from src.cleaner import REQUIRED_COLUMNS
 
 
 HEADER_SCAN_ROWS = 20
+# DataFrame.attrs flag: the index holds the row numbers shown in the spreadsheet.
+SPREADSHEET_ROWS = "spreadsheet_rows"
 
 
 def find_sales_header_row(raw: pd.DataFrame) -> int | None:
@@ -29,4 +31,23 @@ def dataframe_from_excel(uploaded_file) -> pd.DataFrame:
 
     dataframe = raw.iloc[header_row + 1 :].copy()
     dataframe.columns = [str(value).strip() for value in raw.iloc[header_row]]
-    return dataframe.dropna(how="all")
+    dataframe = dataframe.dropna(how="all")
+    # pandas row 0 is spreadsheet row 1, so this keeps the row numbers people see in Excel.
+    dataframe.index = dataframe.index + 1
+    dataframe.attrs[SPREADSHEET_ROWS] = True
+    return dataframe
+
+
+def dataframe_from_csv(uploaded_file) -> pd.DataFrame:
+    dataframe = pd.read_csv(uploaded_file)
+    # The header is row 1, so the first record is row 2.
+    dataframe.index = dataframe.index + 2
+    dataframe.attrs[SPREADSHEET_ROWS] = True
+    return dataframe
+
+
+def read_sales_file(uploaded_file) -> pd.DataFrame:
+    """Read an uploaded CSV or Excel file, indexed by its spreadsheet row numbers."""
+    if uploaded_file.name.lower().endswith(".csv"):
+        return dataframe_from_csv(uploaded_file)
+    return dataframe_from_excel(uploaded_file)

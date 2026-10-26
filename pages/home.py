@@ -1,20 +1,39 @@
-import pandas as pd
 import streamlit as st
 
-from src.cleaner import clean_data
+from src.cleaner import clean_data_with_report
 from src.page_utils import page_header, render_currency_selector, require_authenticated
 from src.session import get_dataframe, save_dataframe
 from src.templates import demo_dataset_bytes, inventory_template_bytes
-from src.uploads import dataframe_from_excel
+from src.uploads import read_sales_file
 
 
 EXCEL_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 
-def read_uploaded_file(uploaded_file) -> pd.DataFrame:
-    if uploaded_file.name.lower().endswith(".csv"):
-        return pd.read_csv(uploaded_file)
-    return dataframe_from_excel(uploaded_file)
+def show_upload_report(report: dict) -> None:
+    """Explain exactly which rows were skipped and why."""
+    skipped = report["rows_skipped"]
+    if not skipped:
+        st.caption(f"All {report['rows_received']:,} rows passed the checks.")
+        return
+    st.warning(
+        f"{skipped:,} of {report['rows_received']:,} rows were skipped. "
+        "They are not included in any analysis.",
+        icon=":material/warning:",
+    )
+    with st.expander("See why rows were skipped"):
+        for reason, count in report["reasons"]:
+            st.markdown(f"- **{count:,}** · {reason}")
+        st.dataframe(report["skipped_rows"].head(50), width="stretch", hide_index=True)
+        if skipped > 50:
+            st.caption(f"Showing the first 50 of {skipped:,} skipped rows.")
+        st.download_button(
+            "Download skipped rows (CSV)",
+            report["skipped_rows"].to_csv(index=False).encode("utf-8"),
+            "insightiq_skipped_rows.csv",
+            "text/csv",
+            icon=":material/download:",
+        )
 
 
 require_authenticated()
@@ -41,12 +60,14 @@ with setup_column:
 
         if uploaded_file is not None:
             try:
-                dataframe = clean_data(read_uploaded_file(uploaded_file))
+                dataframe, report = clean_data_with_report(read_sales_file(uploaded_file))
                 if dataframe.empty:
                     st.error("No valid sales records were found. Check that Date, Product, Quantity, and Price contain valid values.")
+                    show_upload_report(report)
                     st.stop()
                 save_dataframe(dataframe)
                 st.success(f"Data ready: {len(dataframe):,} clean sales record(s).")
+                show_upload_report(report)
             except (ValueError, KeyError, TypeError) as error:
                 st.error(f"We could not prepare this file: {error}")
 

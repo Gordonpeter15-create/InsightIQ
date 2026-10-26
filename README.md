@@ -10,15 +10,17 @@ stock-outs, reorder quantities, suppliers, promotions, customers, or delivery in
 ## Features
 
 - **Sign in / create account** – local accounts with PBKDF2-hashed passwords
-- **Upload** – CSV or Excel, including formatted workbooks with a title above the header row
+- **Upload** – CSV or Excel, including formatted workbooks with a title above the header row; every
+  skipped row is listed with its spreadsheet row number and reason, and can be downloaded to fix
 - **Currency choice** – pick the currency your sales are recorded in (Home or Settings); it is saved
   to your account and used across every page and the Excel report. Values are labelled, not converted
-- **Dashboard** – revenue by product, over time, and by month
+- **Dashboard** – revenue by product, over time, by day of the week, and by month
 - **Ask Your Data** – answers common questions about the uploaded sales
 - **Business Advisor** – executive summary (what changed, main risk, best opportunity, next step),
-  declining products, and momentum
+  declining products, momentum, and day-of-week patterns
 - **Forecasting** – revenue trend forecast
-- **Inventory Guidance** – High Priority / Watch / Opportunity review when stock fields are supplied
+- **Inventory Guidance** – High Priority / Watch / Opportunity review when stock fields are supplied,
+  with an estimate of how many days current stock covers at the observed sales pace
 - **Reports** – Excel report download
 
 ## Data format
