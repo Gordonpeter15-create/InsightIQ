@@ -136,10 +136,20 @@ class DaysOfStockTests(unittest.TestCase):
         self.assertTrue(pd.isna(items.loc["Milk", "Days_Of_Stock"]))
         self.assertNotIn("Estimate:", items.loc["Milk", "Reason"])
 
-    def test_estimate_does_not_change_priority(self):
-        # Rice covers only 3 days against a 5-day lead time, but its priority still follows the reorder point.
+    def test_stock_above_reorder_point_but_short_of_lead_time_moves_to_watch(self):
+        # Rice is above its reorder point but covers only 3 days against a 5-day lead time.
         items = inventory_guidance(self.stock_dataset([10, 10], [4, 4]))["items"].set_index("Product")
-        self.assertEqual(items.loc["Rice", "Priority"], "🟢 Opportunity")
+        self.assertEqual(items.loc["Rice", "Priority"], "🟡 Watch")
+        self.assertEqual(items.loc["Rice", "Recommended_Action"], "Check stock before the next order")
+        self.assertIn("Moved to Watch", items.loc["Rice", "Reason"])
+        # Milk covers 10 days against a 2-day lead time, so it stays an Opportunity.
+        self.assertEqual(items.loc["Milk", "Priority"], "🟢 Opportunity")
+
+    def test_lead_time_rule_never_downgrades_high_priority(self):
+        rows = [{"Date": f"2026-01-0{day}", "Product": "Rice", "Quantity": 10, "Price": 10,
+                 "Current Stock": 4, "Reorder Point": 5, "Lead Time": 5} for day in (1, 2)]
+        item = inventory_guidance(clean_data(pd.DataFrame(rows)))["items"].iloc[0]
+        self.assertEqual(item["Priority"], "🔴 High Priority")
 
 
 if __name__ == "__main__":

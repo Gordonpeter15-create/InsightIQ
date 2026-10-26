@@ -114,6 +114,11 @@ def inventory_guidance(df: pd.DataFrame) -> dict:
                 comparison = "shorter than" if days_of_stock < lead_time else "at least"
                 reason += f", {comparison} the stated {lead_time:.0f}-day lead time"
             reason += "."
+            # Above the reorder point but not covering the supplied lead time still deserves a look.
+            if priority == "🟢 Opportunity" and lead_time is not None and lead_time > 0 and days_of_stock < lead_time:
+                priority = "🟡 Watch"
+                action = "Check stock before the next order"
+                reason += " Moved to Watch: stock is above the reorder point but may not cover the lead time at this pace."
         rows.append({
             "Product": product,
             "Current_Stock": stock,
