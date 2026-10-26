@@ -11,6 +11,8 @@ stock-outs, reorder quantities, suppliers, promotions, customers, or delivery in
 
 - **Sign in / create account** – local accounts with PBKDF2-hashed passwords
 - **Upload** – CSV or Excel, including formatted workbooks with a title above the header row
+- **Currency choice** – pick the currency your sales are recorded in (Home or Settings); it is saved
+  to your account and used across every page and the Excel report. Values are labelled, not converted
 - **Dashboard** – revenue by product, over time, and by month
 - **Ask Your Data** – answers common questions about the uploaded sales
 - **Business Advisor** – executive summary (what changed, main risk, best opportunity, next step),

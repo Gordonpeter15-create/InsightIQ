@@ -5,6 +5,8 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
+from src.currency import DEFAULT_CURRENCY, excel_number_format
+
 
 HEADER_FILL = PatternFill("solid", fgColor="4F46E5")
 HEADER_FONT = Font(color="FFFFFF", bold=True)
@@ -37,8 +39,10 @@ def build_excel_report(
     metrics: dict[str, float | int],
     performance: pd.DataFrame,
     insights: list[str],
+    currency: str = DEFAULT_CURRENCY,
 ) -> bytes:
     """Create a downloadable multi-sheet Excel business report."""
+    money_format = excel_number_format(currency)
     workbook = Workbook()
     summary = workbook.active
     summary.title = "Executive Summary"
@@ -57,8 +61,8 @@ def build_excel_report(
     summary["B7"] = metrics["items"]
     summary["A8"] = "Average Order"
     summary["B8"] = metrics["average_order"]
-    summary["B5"].number_format = "$#,##0.00"
-    summary["B8"].number_format = "$#,##0.00"
+    summary["B5"].number_format = money_format
+    summary["B8"].number_format = money_format
     summary["A10"] = "AI Insights"
     summary["A10"].font = Font(bold=True)
     for index, insight in enumerate(insights, start=11):
@@ -71,7 +75,7 @@ def build_excel_report(
     performance_sheet = workbook.create_sheet("Product Performance")
     _write_dataframe(performance_sheet, performance)
     for row in range(2, performance_sheet.max_row + 1):
-        performance_sheet[f"B{row}"].number_format = "$#,##0.00"
+        performance_sheet[f"B{row}"].number_format = money_format
 
     sales_sheet = workbook.create_sheet("Filtered Sales Data")
     export_df = df.copy()
@@ -79,7 +83,7 @@ def build_excel_report(
     _write_dataframe(sales_sheet, export_df)
     revenue_column = export_df.columns.get_loc("Revenue") + 1
     for row in range(2, sales_sheet.max_row + 1):
-        sales_sheet.cell(row=row, column=revenue_column).number_format = "$#,##0.00"
+        sales_sheet.cell(row=row, column=revenue_column).number_format = money_format
 
     output = BytesIO()
     workbook.save(output)

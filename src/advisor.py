@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import pandas as pd
 
+from src.currency import DEFAULT_CURRENCY, format_money
+
 
 MIN_DATES_FOR_COMPARISON = 8
 SIGNIFICANT_CHANGE_PERCENT = 15.0
@@ -142,7 +144,7 @@ def _seasonal_signal(df: pd.DataFrame) -> str:
     return "Observed: no strong weekend-versus-weekday revenue difference appears in the available data."
 
 
-def analyze_business_advisor(df: pd.DataFrame) -> dict:
+def analyze_business_advisor(df: pd.DataFrame, currency: str = DEFAULT_CURRENCY) -> dict:
     """Return all evidence and action recommendations used by the Advisor page."""
     periods = _comparison_periods(df)
     if periods is None:
@@ -178,7 +180,7 @@ def analyze_business_advisor(df: pd.DataFrame) -> dict:
             "title": f"Review {row.Product}",
                 "detail": (
                     f"Observed: revenue fell {abs(row.Revenue_Change_Percent):.1f}% "
-                    f"(${row.Previous_Revenue:,.2f} → ${row.Recent_Revenue:,.2f}). "
+                    f"({format_money(row.Previous_Revenue, currency)} → {format_money(row.Recent_Revenue, currency)}). "
                     "Next step: check availability, price, shelf placement, and local demand."
                 ),
         })

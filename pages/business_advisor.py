@@ -2,8 +2,10 @@ import pandas as pd
 import streamlit as st
 
 from src.advisor import analyze_business_advisor, executive_summary
+from src.currency import money_label
 from src.inventory import inventory_guidance
 from src.page_utils import render_data_filters, require_dataframe
+from src.session import get_currency
 
 
 st.set_page_config(page_title="Business Advisor | InsightIQ", page_icon="💼", layout="wide")
@@ -16,7 +18,12 @@ if df.empty:
     st.warning("No sales match these filters.")
     st.stop()
 
-advisor = analyze_business_advisor(df)
+currency = get_currency()
+revenue_columns = {
+    column: st.column_config.NumberColumn(money_label(column.replace("_", " "), currency))
+    for column in ("Recent_Revenue", "Previous_Revenue")
+}
+advisor = analyze_business_advisor(df, currency)
 inventory = inventory_guidance(df)
 
 st.header("Executive Summary")
@@ -54,7 +61,7 @@ if advisor["has_comparison"] and not advisor["declining"].empty:
     ]].copy()
     display["Priority / reason"] = "🔴 High Priority — material revenue decline"
     display["Revenue_Change_Percent"] = display["Revenue_Change_Percent"].map(lambda value: f"{value:.1f}%")
-    st.dataframe(display, width="stretch", hide_index=True)
+    st.dataframe(display, width="stretch", hide_index=True, column_config=revenue_columns)
 else:
     st.info("No material declining product was detected with the current comparison rules, or there is not enough history.")
 
@@ -66,7 +73,7 @@ if advisor["has_comparison"] and not advisor["momentum"].empty:
     ]].copy()
     display["Recommended action"] = "Review stock before the next order; demand is accelerating in the observed period."
     display["Revenue_Change_Percent"] = display["Revenue_Change_Percent"].map(lambda value: f"+{value:.1f}%")
-    st.dataframe(display, width="stretch", hide_index=True)
+    st.dataframe(display, width="stretch", hide_index=True, column_config=revenue_columns)
 else:
     st.info("No material product momentum was detected with the current comparison rules, or there is not enough history.")
 

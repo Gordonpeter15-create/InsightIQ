@@ -1,7 +1,9 @@
 import pandas as pd
 import streamlit as st
 
-from src.session import get_dataframe
+from src.auth import set_user_currency
+from src.currency import CURRENCIES, currency_label
+from src.session import get_currency, get_dataframe, set_currency
 
 
 def require_authenticated() -> None:
@@ -35,3 +37,25 @@ def render_data_filters(df: pd.DataFrame, key_prefix: str) -> pd.DataFrame:
         if isinstance(dates, tuple) and len(dates) == 2:
             df = df[df["Date"].between(*map(pd.Timestamp, dates))]
     return df
+
+
+def render_currency_selector(key: str) -> str:
+    """Let the signed-in user choose the currency their sales data is recorded in."""
+    codes = list(CURRENCIES)
+
+    def save_choice() -> None:
+        chosen = st.session_state[key]
+        set_currency(chosen)
+        if st.session_state.get("user_email"):
+            set_user_currency(st.session_state["user_email"], chosen)
+
+    st.selectbox(
+        "Currency",
+        codes,
+        index=codes.index(get_currency()),
+        format_func=currency_label,
+        key=key,
+        on_change=save_choice,
+        help="Amounts are shown in this currency. InsightIQ labels values; it does not convert them.",
+    )
+    return get_currency()

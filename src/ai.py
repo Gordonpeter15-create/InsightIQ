@@ -1,7 +1,11 @@
 import pandas as pd
 
+from src.currency import DEFAULT_CURRENCY, format_money
 
-def generate_insights(df: pd.DataFrame, performance: pd.DataFrame) -> list[str]:
+
+def generate_insights(
+    df: pd.DataFrame, performance: pd.DataFrame, currency: str = DEFAULT_CURRENCY
+) -> list[str]:
     """Generate transparent, rule-based business insights from the selected data."""
     total_revenue = float(df["Revenue"].sum())
     best = performance.iloc[0]
@@ -10,7 +14,7 @@ def generate_insights(df: pd.DataFrame, performance: pd.DataFrame) -> list[str]:
 
     insights = [
         f"🏆 {best['Product']} generates {share:.1f}% of the selected revenue.",
-        f"📉 {lowest['Product']} has the lowest revenue at ${lowest['Revenue']:,.2f}.",
+        f"📉 {lowest['Product']} has the lowest revenue at {format_money(float(lowest['Revenue']), currency)}.",
     ]
     if share >= 60:
         insights.append("⚠️ Revenue is concentrated in one product; diversify products or strengthen alternatives.")

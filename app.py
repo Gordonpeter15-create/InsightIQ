@@ -6,9 +6,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import pandas as pd
 import streamlit as st
 
-from src.auth import authenticate_user, create_user, initialize_auth_db
+from src.auth import authenticate_user, create_user, get_user_currency, initialize_auth_db
 from src.cleaner import clean_data
-from src.session import clear_dataframe, save_dataframe
+from src.page_utils import render_currency_selector
+from src.session import clear_dataframe, save_dataframe, set_currency
 from src.templates import demo_dataset_bytes, inventory_template_bytes
 from src.uploads import dataframe_from_excel
 
@@ -55,6 +56,8 @@ if not st.session_state.authenticated:
             if user_name:
                 st.session_state.authenticated = True
                 st.session_state.user_name = user_name
+                st.session_state.user_email = email.strip().lower()
+                set_currency(get_user_currency(email))
                 st.rerun()
             st.error("Incorrect email or password.")
     with sign_up_tab:
@@ -76,12 +79,17 @@ with sidebar_logout:
     if st.button("Log out"):
         st.session_state.authenticated = False
         st.session_state.pop("user_name", None)
+        st.session_state.pop("user_email", None)
+        st.session_state.pop("currency", None)
         st.session_state.pop("chat_history", None)
         clear_dataframe()
         st.rerun()
 
 st.header("Upload sales data")
 st.write("Your file needs these columns: `Date`, `Product`, `Quantity`, and `Price`.")
+currency_column, _ = st.columns([1, 2])
+with currency_column:
+    render_currency_selector("home_currency")
 with st.expander("Try InsightIQ with demo supermarket data", expanded=False):
     st.write(
         "Download this fictional 28-day dataset, upload it below, then visit Dashboard, Business Advisor, "

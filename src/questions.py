@@ -1,12 +1,16 @@
 import pandas as pd
 
-
-def _money(value: float) -> str:
-    return f"${value:,.2f}"
+from src.currency import DEFAULT_CURRENCY, format_money
 
 
-def answer_question(question: str, df: pd.DataFrame, performance: pd.DataFrame) -> str:
+def answer_question(
+    question: str, df: pd.DataFrame, performance: pd.DataFrame, currency: str = DEFAULT_CURRENCY
+) -> str:
     """Answer common plain-English questions from the currently filtered sales data."""
+
+    def _money(value: float) -> str:
+        return format_money(value, currency)
+
     text = question.lower().strip()
     total_revenue = float(df["Revenue"].sum())
     best_revenue = performance.iloc[0]

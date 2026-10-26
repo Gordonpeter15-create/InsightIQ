@@ -3,6 +3,7 @@ import streamlit as st
 from src.metrics import product_performance
 from src.page_utils import render_data_filters, require_dataframe
 from src.questions import answer_question
+from src.session import get_currency
 
 
 st.set_page_config(page_title="Ask Your Data | InsightIQ", page_icon="💬", layout="wide")
@@ -27,5 +28,5 @@ for message in st.session_state.question_history:
 question = st.chat_input("Example: Which product made the most revenue?")
 if question:
     st.session_state.question_history.append({"role": "user", "content": question})
-    st.session_state.question_history.append({"role": "assistant", "content": answer_question(question, df, performance)})
+    st.session_state.question_history.append({"role": "assistant", "content": answer_question(question, df, performance, get_currency())})
     st.rerun()

@@ -5,6 +5,8 @@ import sqlite3
 from contextlib import closing
 from pathlib import Path
 
+from src.currency import CURRENCIES, DEFAULT_CURRENCY
+
 
 DATABASE_PATH = Path(__file__).resolve().parents[1] / "data" / "insightiq_users.db"
 ITERATIONS = 310_000
@@ -23,6 +25,12 @@ def initialize_auth_db() -> None:
             )
             """
         )
+        # Databases created before currency support gain the column with the previous behaviour (USD).
+        columns = {row[1] for row in connection.execute("PRAGMA table_info(users)")}
+        if "currency" not in columns:
+            connection.execute(
+                f"ALTER TABLE users ADD COLUMN currency TEXT NOT NULL DEFAULT '{DEFAULT_CURRENCY}'"
+            )
 
 
 def _hash_password(password: str, salt: bytes | None = None) -> str:
@@ -64,3 +72,20 @@ def authenticate_user(email: str, password: str) -> str | None:
     salt_hex, expected_hash = stored_hash.split("$", maxsplit=1)
     candidate_hash = _hash_password(password, bytes.fromhex(salt_hex)).split("$", maxsplit=1)[1]
     return full_name if hmac.compare_digest(candidate_hash, expected_hash) else None
+
+
+def get_user_currency(email: str) -> str:
+    with closing(sqlite3.connect(DATABASE_PATH)) as connection, connection:
+        row = connection.execute(
+            "SELECT currency FROM users WHERE email = ?", (email.strip().lower(),)
+        ).fetchone()
+    return row[0] if row and row[0] in CURRENCIES else DEFAULT_CURRENCY
+
+
+def set_user_currency(email: str, currency: str) -> None:
+    if currency not in CURRENCIES:
+        raise ValueError(f"Unsupported currency: {currency}")
+    with closing(sqlite3.connect(DATABASE_PATH)) as connection, connection:
+        connection.execute(
+            "UPDATE users SET currency = ? WHERE email = ?", (currency, email.strip().lower())
+        )

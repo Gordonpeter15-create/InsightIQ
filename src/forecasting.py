@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
+from src.currency import DEFAULT_CURRENCY, money_label
+
 
 def forecast_revenue(df: pd.DataFrame, days_ahead: int = 7) -> pd.DataFrame | None:
     """Estimate daily revenue with a linear trend when enough daily data exists."""
@@ -18,7 +20,7 @@ def forecast_revenue(df: pd.DataFrame, days_ahead: int = 7) -> pd.DataFrame | No
     return pd.DataFrame({"Date": future_dates, "Revenue": prediction})
 
 
-def forecast_revenue_chart(df: pd.DataFrame, forecast: pd.DataFrame):
+def forecast_revenue_chart(df: pd.DataFrame, forecast: pd.DataFrame, currency: str = DEFAULT_CURRENCY):
     daily = df.groupby("Date", as_index=False)["Revenue"].sum().sort_values("Date")
     figure = go.Figure()
     figure.add_trace(
@@ -39,4 +41,4 @@ def forecast_revenue_chart(df: pd.DataFrame, forecast: pd.DataFrame):
             line={"dash": "dash", "color": "#4F46E5"},
         )
     )
-    return figure.update_layout(yaxis_title="Revenue", xaxis_title="", showlegend=True)
+    return figure.update_layout(yaxis_title=money_label("Revenue", currency), xaxis_title="", showlegend=True)
