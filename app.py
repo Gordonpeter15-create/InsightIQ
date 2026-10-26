@@ -120,7 +120,8 @@ navigation = st.navigation(
     }
 )
 
-with st.sidebar:
+# The account block is pushed to the bottom of the sidebar by CSS, below any page filters.
+with st.sidebar.container(key="iq_account"):
     st.markdown(
         f'<div class="iq-account"><strong>{escape(st.session_state.get("user_name", "User"))}</strong>'
         f'<span>{escape(st.session_state.get("user_email", ""))}</span></div>',

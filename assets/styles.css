@@ -115,6 +115,11 @@
 .iq-feature span { color: var(--iq-muted); font-size: 0.87rem; line-height: 1.5; }
 .iq-auth-footnote { margin-top: 2rem; color: #5d6478; font-size: 0.78rem; }
 
+/* Sidebar account block: rendered first in code, displayed last so page filters come first. */
+section[data-testid="stSidebar"] [data-testid="stLayoutWrapper"]:has(> .st-key-iq_account) {
+    order: 99;
+    margin-top: 1rem;
+}
 /* Sidebar account block */
 .iq-account {
     padding: 0.7rem 0.2rem 0.4rem;

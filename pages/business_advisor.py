@@ -38,7 +38,7 @@ inventory = inventory_guidance(df)
 st.subheader("Executive summary")
 summary_columns = st.columns(4)
 for column, item in zip(summary_columns, executive_summary(advisor, inventory)):
-    with column.container(border=True):
+    with column.container(border=True, height="stretch"):
         st.caption(item["label"])
         st.markdown(safe_markdown(item["detail"]))
 
