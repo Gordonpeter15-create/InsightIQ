@@ -9,6 +9,8 @@ import streamlit as st
 from src.auth import authenticate_user, create_user, initialize_auth_db
 from src.cleaner import clean_data
 from src.session import clear_dataframe, save_dataframe
+from src.templates import demo_dataset_bytes, inventory_template_bytes
+from src.uploads import dataframe_from_excel
 
 
 st.set_page_config(page_title="InsightIQ", page_icon="📊", layout="wide")
@@ -24,7 +26,7 @@ def load_css() -> None:
 def read_uploaded_file(uploaded_file) -> pd.DataFrame:
     if uploaded_file.name.lower().endswith(".csv"):
         return pd.read_csv(uploaded_file)
-    return pd.read_excel(uploaded_file)
+    return dataframe_from_excel(uploaded_file)
 
 
 load_css()
@@ -80,6 +82,28 @@ with sidebar_logout:
 
 st.header("Upload sales data")
 st.write("Your file needs these columns: `Date`, `Product`, `Quantity`, and `Price`.")
+with st.expander("Try InsightIQ with demo supermarket data", expanded=False):
+    st.write(
+        "Download this fictional 28-day dataset, upload it below, then visit Dashboard, Business Advisor, "
+        "Forecasting, and Inventory Guidance to see each feature in action."
+    )
+    st.download_button(
+        "Download demo supermarket data",
+        data=demo_dataset_bytes(),
+        file_name="InsightIQ_demo_supermarket.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+with st.expander("Add inventory guidance to your upload", expanded=False):
+    st.write(
+        "For product-level stock review, add `Current Stock` and `Reorder Point`. "
+        "You can also add `Lead Time` in days."
+    )
+    st.download_button(
+        "Download inventory-ready Excel template",
+        data=inventory_template_bytes(),
+        file_name="InsightIQ_inventory_template.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
 uploaded_file = st.file_uploader("Upload CSV or Excel", type=["csv", "xlsx"])
 
 if uploaded_file is not None:
@@ -90,7 +114,7 @@ if uploaded_file is not None:
             st.stop()
         save_dataframe(dataframe)
         st.success(f"Data ready: {len(dataframe):,} clean sales record(s).")
-        st.dataframe(dataframe.head(10), use_container_width=True, hide_index=True)
+        st.dataframe(dataframe.head(10), width="stretch", hide_index=True)
     except (ValueError, KeyError, TypeError) as error:
         st.error(f"We could not prepare this file: {error}")
 else:

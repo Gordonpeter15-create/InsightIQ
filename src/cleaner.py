@@ -11,7 +11,8 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
         raise ValueError(f"Missing required column(s): {', '.join(sorted(missing))}.")
 
     cleaned = df.copy().drop_duplicates()
-    cleaned["Date"] = pd.to_datetime(cleaned["Date"], errors="coerce")
+    # Mixed parsing accepts normal spreadsheet date formats while invalid entries become NaT.
+    cleaned["Date"] = pd.to_datetime(cleaned["Date"], errors="coerce", format="mixed")
     cleaned["Quantity"] = pd.to_numeric(cleaned["Quantity"], errors="coerce")
     cleaned["Price"] = pd.to_numeric(cleaned["Price"], errors="coerce")
     cleaned = cleaned.dropna(subset=["Date", "Product", "Quantity", "Price"])

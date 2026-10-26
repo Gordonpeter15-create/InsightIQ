@@ -1,7 +1,8 @@
 import pandas as pd
 import streamlit as st
 
-from src.advisor import analyze_business_advisor
+from src.advisor import analyze_business_advisor, executive_summary
+from src.inventory import inventory_guidance
 from src.page_utils import render_data_filters, require_dataframe
 
 
@@ -16,6 +17,16 @@ if df.empty:
     st.stop()
 
 advisor = analyze_business_advisor(df)
+inventory = inventory_guidance(df)
+
+st.header("Executive Summary")
+summary_columns = st.columns(4)
+for column, item in zip(summary_columns, executive_summary(advisor, inventory)):
+    with column.container(border=True):
+        st.caption(item["label"])
+        st.write(item["detail"])
+
+st.divider()
 
 st.header("🚨 Priority Actions")
 for action in advisor["actions"]:
@@ -43,7 +54,7 @@ if advisor["has_comparison"] and not advisor["declining"].empty:
     ]].copy()
     display["Priority / reason"] = "🔴 High Priority — material revenue decline"
     display["Revenue_Change_Percent"] = display["Revenue_Change_Percent"].map(lambda value: f"{value:.1f}%")
-    st.dataframe(display, use_container_width=True, hide_index=True)
+    st.dataframe(display, width="stretch", hide_index=True)
 else:
     st.info("No material declining product was detected with the current comparison rules, or there is not enough history.")
 
@@ -55,16 +66,19 @@ if advisor["has_comparison"] and not advisor["momentum"].empty:
     ]].copy()
     display["Recommended action"] = "Review stock before the next order; demand is accelerating in the observed period."
     display["Revenue_Change_Percent"] = display["Revenue_Change_Percent"].map(lambda value: f"+{value:.1f}%")
-    st.dataframe(display, use_container_width=True, hide_index=True)
+    st.dataframe(display, width="stretch", hide_index=True)
 else:
     st.info("No material product momentum was detected with the current comparison rules, or there is not enough history.")
 
 st.divider()
 st.header("🛒 Stock / Inventory Guidance")
-st.write(
-    "This file does not include current stock, reorder points, supplier lead times, or stock levels. "
-    "InsightIQ therefore recommends stock review and monitoring—not exact order quantities or stock-out dates."
-)
+st.write(inventory["message"])
+if inventory["available"] and not inventory["items"].empty:
+    urgent = inventory["items"].head(3)[["Product", "Priority", "Recommended_Action", "Reason"]]
+    st.dataframe(urgent, width="stretch", hide_index=True)
+    st.caption("See the Inventory Guidance page for the full stock review.")
+else:
+    st.caption("InsightIQ will not estimate stock-outs or reorder quantities without actual inventory fields.")
 
 st.divider()
 st.header("📅 Seasonal / Trend Signals")

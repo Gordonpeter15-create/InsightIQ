@@ -14,6 +14,50 @@ SIGNIFICANT_CHANGE_PERCENT = 15.0
 MIN_PREVIOUS_REVENUE_SHARE = 0.03
 
 
+def executive_summary(advisor: dict, inventory: dict) -> list[dict[str, str]]:
+    """Create a concise, evidence-led briefing for a supermarket owner."""
+    if advisor["has_comparison"]:
+        change = advisor["comparison"]["headline"]
+    else:
+        change = advisor["message"]
+
+    urgent_inventory = pd.DataFrame()
+    if inventory.get("available"):
+        urgent_inventory = inventory.get("items", pd.DataFrame())
+        urgent_inventory = urgent_inventory[urgent_inventory["Priority"] == "🔴 High Priority"]
+
+    declining = advisor.get("declining", pd.DataFrame())
+    momentum = advisor.get("momentum", pd.DataFrame())
+
+    if not urgent_inventory.empty:
+        item = urgent_inventory.iloc[0]
+        risk = (
+            f"{item['Product']} stock is at or below its supplied reorder point. "
+            "Review it before the next purchase decision."
+        )
+        next_step = f"Review {item['Product']} stock and its reorder point first."
+    elif not declining.empty:
+        item = declining.iloc[0]
+        risk = f"{item['Product']} revenue fell {abs(item['Revenue_Change_Percent']):.1f}% in the recent period."
+        next_step = f"Review {item['Product']} availability, price, shelf placement, and local demand."
+    else:
+        risk = "No high-priority stock review or material product decline appears in the available data."
+        next_step = "Continue recording daily sales and review new changes when more data is available."
+
+    if not momentum.empty:
+        item = momentum.iloc[0]
+        opportunity = f"{item['Product']} revenue rose {item['Revenue_Change_Percent']:.1f}% in the recent period."
+    else:
+        opportunity = "No material product growth opportunity appears in the current comparison."
+
+    return [
+        {"label": "What changed", "detail": change},
+        {"label": "Main risk", "detail": risk},
+        {"label": "Best opportunity", "detail": opportunity},
+        {"label": "Next step", "detail": next_step},
+    ]
+
+
 def _percent_change(recent: float, previous: float) -> float | None:
     return None if previous == 0 else (recent - previous) / previous * 100
 

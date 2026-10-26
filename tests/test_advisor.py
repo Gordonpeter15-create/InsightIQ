@@ -2,8 +2,9 @@ import unittest
 
 import pandas as pd
 
-from src.advisor import analyze_business_advisor
+from src.advisor import analyze_business_advisor, executive_summary
 from src.cleaner import clean_data
+from src.inventory import inventory_guidance
 
 
 def sales_frame(product_quantities: dict[str, list[int]], price: float = 10) -> pd.DataFrame:
@@ -69,6 +70,28 @@ class BusinessAdvisorTests(unittest.TestCase):
         self.assertTrue(result["declining"].empty)
         self.assertTrue(result["momentum"].empty)
         self.assertIn("no material product", result["actions"][0]["detail"].lower())
+
+    def test_executive_summary_prioritises_supplied_high_priority_stock(self):
+        df = sales_frame({"Rice": [10] * 6 + [18] * 6, "Oil": [20] * 6 + [5] * 6})
+        df["Current Stock"] = df["Product"].map({"Rice": 5, "Oil": 40})
+        df["Reorder Point"] = df["Product"].map({"Rice": 5, "Oil": 10})
+        summary = executive_summary(analyze_business_advisor(df), inventory_guidance(df))
+        by_label = {item["label"]: item["detail"] for item in summary}
+        self.assertIn("Rice stock is at or below", by_label["Main risk"])
+        self.assertIn("Review Rice stock", by_label["Next step"])
+        self.assertIn("Rice revenue rose", by_label["Best opportunity"])
+        summary_text = " ".join(by_label.values()).lower()
+        self.assertNotIn("stock out", summary_text)
+        self.assertNotIn("order exactly", summary_text)
+
+    def test_executive_summary_stays_cautious_without_comparison_data(self):
+        df = clean_data(pd.DataFrame([
+            {"Date": "2026-01-01", "Product": "Rice", "Quantity": 2, "Price": 10},
+        ]))
+        summary = executive_summary(analyze_business_advisor(df), inventory_guidance(df))
+        by_label = {item["label"]: item["detail"] for item in summary}
+        self.assertIn("Insufficient data", by_label["What changed"])
+        self.assertIn("No material product growth", by_label["Best opportunity"])
 
 
 if __name__ == "__main__":

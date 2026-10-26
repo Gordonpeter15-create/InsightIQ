@@ -2,6 +2,7 @@ import hashlib
 import hmac
 import secrets
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 
 
@@ -11,7 +12,7 @@ ITERATIONS = 310_000
 
 def initialize_auth_db() -> None:
     DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with sqlite3.connect(DATABASE_PATH) as connection:
+    with closing(sqlite3.connect(DATABASE_PATH)) as connection, connection:
         connection.execute(
             """
             CREATE TABLE IF NOT EXISTS users (
@@ -40,7 +41,7 @@ def create_user(full_name: str, email: str, password: str) -> tuple[bool, str]:
         return False, "Use a password with at least 8 characters."
 
     try:
-        with sqlite3.connect(DATABASE_PATH) as connection:
+        with closing(sqlite3.connect(DATABASE_PATH)) as connection, connection:
             connection.execute(
                 "INSERT INTO users (email, full_name, password_hash) VALUES (?, ?, ?)",
                 (email, full_name, _hash_password(password)),
@@ -52,7 +53,7 @@ def create_user(full_name: str, email: str, password: str) -> tuple[bool, str]:
 
 def authenticate_user(email: str, password: str) -> str | None:
     email = email.strip().lower()
-    with sqlite3.connect(DATABASE_PATH) as connection:
+    with closing(sqlite3.connect(DATABASE_PATH)) as connection, connection:
         row = connection.execute(
             "SELECT full_name, password_hash FROM users WHERE email = ?", (email,)
         ).fetchone()

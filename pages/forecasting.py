@@ -16,5 +16,5 @@ forecast = forecast_revenue(df, days_ahead=7)
 if forecast is None:
     st.info("Insufficient data to determine this reliably. Upload at least 7 different sales dates.")
 else:
-    st.plotly_chart(forecast_revenue_chart(df, forecast), use_container_width=True)
+    st.plotly_chart(forecast_revenue_chart(df, forecast), width="stretch")
     st.metric("Estimated revenue for next 7 days", f"${forecast['Revenue'].sum():,.2f}")
