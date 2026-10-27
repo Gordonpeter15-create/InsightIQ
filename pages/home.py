@@ -38,8 +38,9 @@ def show_upload_report(report: dict) -> None:
 
 require_authenticated()
 first_name = str(st.session_state.get("user_name", "")).split(" ")[0]
+greeting = "Welcome" if st.session_state.get("new_account") else "Welcome back"
 page_header(
-    f"Welcome back, {first_name}" if first_name else "Welcome back",
+    f"{greeting}, {first_name}" if first_name else greeting,
     "Upload your sales records to see performance, priorities, and next steps for your store.",
     eyebrow="Home",
 )

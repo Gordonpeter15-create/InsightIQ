@@ -22,6 +22,13 @@ def load_css() -> None:
         st.markdown(f"<style>{stylesheet.read_text()}</style>", unsafe_allow_html=True)
 
 
+def start_session(user_name: str, email: str) -> None:
+    st.session_state.authenticated = True
+    st.session_state.user_name = user_name
+    st.session_state.user_email = email.strip().lower()
+    set_currency(get_user_currency(email))
+
+
 def sign_in_page() -> None:
     brand_column, form_column = st.columns([1.15, 1], gap="large")
     with brand_column:
@@ -60,21 +67,23 @@ def sign_in_page() -> None:
                 if submitted:
                     user_name = authenticate_user(email, password)
                     if user_name:
-                        st.session_state.authenticated = True
-                        st.session_state.user_name = user_name
-                        st.session_state.user_email = email.strip().lower()
-                        set_currency(get_user_currency(email))
+                        start_session(user_name, email)
                         st.rerun()
-                    st.error("Incorrect email or password.")
+                    st.error("Incorrect email or password. New here? Use the **Create account** tab.")
             with sign_up_tab:
-                with st.form("sign_up_form", clear_on_submit=True, border=False):
+                with st.form("sign_up_form", border=False):
                     full_name = st.text_input("Full name")
                     email = st.text_input("Email", key="signup_email", placeholder="you@store.com")
                     password = st.text_input("Password", type="password", help="At least 8 characters.")
                     submitted = st.form_submit_button("Create account", type="primary", width="stretch")
                 if submitted:
                     created, message = create_user(full_name, email, password)
-                    (st.success if created else st.error)(message)
+                    if created:
+                        # Sign the new user straight in rather than asking them to switch tabs.
+                        start_session(full_name.strip(), email)
+                        st.session_state.new_account = True
+                        st.rerun()
+                    st.error(message)
         st.markdown(
             '<p class="iq-auth-footnote">Your sales data stays in your session and is not shared.</p>',
             unsafe_allow_html=True,
@@ -83,7 +92,7 @@ def sign_in_page() -> None:
 
 def sign_out() -> None:
     st.session_state.authenticated = False
-    for key in ("user_name", "user_email", "currency", "chat_history", "question_history"):
+    for key in ("user_name", "user_email", "currency", "chat_history", "question_history", "new_account"):
         st.session_state.pop(key, None)
     clear_dataframe()
 
